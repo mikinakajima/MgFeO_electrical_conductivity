@@ -126,7 +126,7 @@ V_Mc_error = []
 Ref_Mc = []
 Ref_Mc_error = []    
 
-with open('McCoy_R.txt', 'r') as file:
+with open('Hugoniot/McCoy_R.txt', 'r') as file:
     file.readline()
     for line in file:
         columns = line.strip().split()
