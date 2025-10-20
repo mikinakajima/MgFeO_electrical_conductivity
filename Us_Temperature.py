@@ -18,54 +18,24 @@ plt.rcParams['font.family'] = 'Helvetica'
 
 
 filenames = ['MgFeO_shock_data/39878_Us_T.txt', 'MgFeO_shock_data/39874_Us_T.txt', 'MgFeO_shock_data/38691_Us_T.txt', 'MgFeO_shock_data/38692_Us_T.txt', 'MgFeO_shock_data/39879_Us_T.txt', 'MgFeO_shock_data/38694_Us_T.txt',    'MgFeO_shock_data/38693_Us_T.txt',  'MgFeO_shock_data/39877_Us_T.txt']
-
-
-
 colors = ['gold','coral','orange','green', '#33BEB7', 'skyblue' ,'blue', 'royalblue'  ]
 labelnames = ['MgO (39878)', 'MgO (39874)','MgO (38691)','Mg$_{0.98}$Fe$_{0.02}$O (38692)', 'Mg$_{0.98}$Fe$_{0.02}$O (39879)','Mg$_{0.95}$Fe$_{0.05}$O (38694)', 'Mg$_{0.95}$Fe$_{0.05}$O (38693)',  'Mg$_{0.95}$Fe$_{0.05}$O (39877)'  ]
 
 
-
-
- 
-   # Soubiran & Militzer 
-SMdata_P = [556.425, 631.8, 691.3, 754.38]  #in GPa
-SMdata_R = [1.656, 3.017, 4.568, 6.63]      #reflectivity                                                #Burkhardt
-#556.425 1.656
-#631.8 3.017
-#691.3 4.568
-#754.38 6.63
-    
-                                                               
-# Reading Lars students file
+                                                            
+# Reading DFT-MD data
 
 file_DFT = 'Hugoniot/mgo_dft_data.txt'
 
 
-def combine_files(filename, xx_combined,yy_combined):
-    with open(filename, 'r') as file:
-        for line in file:
-            columns = line.strip().split()
-            xx_combined.append(float(columns[0])) #shock velocity
-            yy_combined.append(float(columns[3])) #temperature
-            
-            
-    return xx_combined, yy_combined
-
-                                                               
+                                                              
  
 def open_files(filename, ax,labelname,color):
 
-    xx = []
-    yy = []
-    error = []    
+    data = np.loadtxt(filename)
 
-    with open(filename, 'r') as file:
-        for line in file:
-            columns = line.strip().split()
-            xx.append(float(columns[0])) #shock velocity
-            yy.append(float(columns[3])) #temperature
-        
+    xx = data[:, 0] # shock velocity
+    yy = data[:, 3] # Temperature
 
     x_fit = np.linspace(min(xx),max(xx),100)
     model = np.poly1d(np.polyfit(xx, yy, 2))
@@ -73,56 +43,37 @@ def open_files(filename, ax,labelname,color):
 
 
     ax.scatter(xx,yy, s=4, label=labelname,c=color,marker = 'o', alpha=0.3, edgecolors='none')
-#    ax.scatter(xx,yy, s=4,label=labelname, c=color, marker = 'o', alpha=0.3, edgecolors='none')
     ax.plot(x_fit, model(x_fit),color=color,zorder=2)
     ax.fill_between(x_fit, model(x_fit)+ error,  model(x_fit)- error, facecolor=color, alpha=0.2,zorder=2)
 
+x = np.arange(15, 31)
 
-x = np.array([15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30])
-
-#rho0 = 3.584e3
-#a = 1.22568
-#b = 7.1552 * 1000
-
-rho0 = 3.580e3
-a = 1.23011
+rho0 = 3.580e3 #MgO density
+a = 1.23011 # MgFeO Up-Us relationship
 b = 7.12744 * 1000
 
 Press = rho0 * x * 1000 * (x * 1000-b)/a * 1e-9 #Us-P relationship based on our experiments
 
-SMdata_Us = []
 f = interpolate.interp1d(Press, x)
-for i in range(0,len(SMdata_P)):
-    SMdata_Us.append(f(SMdata_P[i]))
-    
+      
+# liquid-B2 MgO phase curve
+data = np.loadtxt('phase/phase.txt', delimiter=',')
+mask = data[:, 0] > 344.0 # mask low pressures ranges so that interpolation is easier
 
-
-
-
-phase_file = 'phase/phase.txt'
-Phase_P = []
-Phase_T = []
-Phase_Us = []
-with open(phase_file, 'r') as file:
-    for line in file:
-        pressure, temp = line.strip().split(',')
-        if 344.0 < float(pressure) :
-            Phase_P.append(float(pressure))
-            Phase_T.append(float(temp)*1000.0)
-            Phase_Us.append(f(pressure))
-
-
+Phase_P = data[mask, 0]
+Phase_T = data[mask, 1] * 1000.0
+Phase_Us = f(Phase_P)
+            
+# B1-B2 phase curve            
 phase_file = 'phase/phase_B1.txt'
-Phase_P_B1 = []
-Phase_T_B1 = []
-Phase_Us_B1 = []
-with open(phase_file, 'r') as file:
-    for line in file:
-        pressure, temp = line.strip().split(',')
-        if 344.0 < float(pressure):
-            Phase_P_B1.append(float(pressure))
-            Phase_T_B1.append(float(temp)*1000.0)
-            Phase_Us_B1.append(f(pressure))
+data = np.loadtxt(phase_file, delimiter=',')
+mask = data[:, 0] > 344.0
+
+# Extract filtered columns
+Phase_P_B1 = data[mask, 0]
+Phase_T_B1 = data[mask, 1] * 1000.0
+Phase_Us_B1 = f(Phase_P_B1)
+            
 
 # Function to interpolate temperature data
 def interpolate_temperature(pressure_values, temperature_values):
@@ -150,34 +101,21 @@ B1_Us_smooth, B1_temperature_smooth = interpolate_temperature(Phase_Us_B1, Phase
 Us_smooth, T_smooth = interpolate_temperature(Phase_Us, Phase_T)
 
 
-V_Mc = []
-V_Mc_error = []
-T_Mc = []
-T_Mc_error = []    
+#McCoy et al 2019
+data = np.loadtxt('Hugoniot/McCoy_R.txt', skiprows=1)
 
-with open('Hugoniot/McCoy_R.txt', 'r') as file:
-    file.readline()
-    for line in file:
-        columns = line.strip().split()
-        #print(columns)
-        V_Mc.append(float(columns[1]))
-        V_Mc_error.append(float(columns[2]))
-        T_Mc.append(float(columns[5]))
-        T_Mc_error.append(float(columns[6]))
-        #print(columns[3])
-        
-
-
-T_Mc=np.array(T_Mc)*1000.0
-T_Mc_error=np.array(T_Mc_error)*1000.0
-
+# velocity, velocity error, tempearture, temperature error from McCoy et al 2019
+V_Mc        = data[:, 1]
+V_Mc_error  = data[:, 2]
+T_Mc        = data[:, 5]*1000.0
+T_Mc_error  = data[:, 6]*1000.0
 
 
 
 fig, ax1 = plt.subplots()
 
 
-x2 = np.array([16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28])
+x2 = np.arange(16, 29)
 
 ax1.set_xticks(x2)
 
@@ -185,10 +123,11 @@ ax1.set_xticks(x2)
 for i in range(0,len(filenames)):
     open_files(filenames[i], ax1,labelnames[i],colors[i])
     
-xx_combined=[]
-yy_combined=[]
-for i in range(0,len(filenames)):
-    combine_files(filenames[i],xx_combined,yy_combined)
+
+#combining MgFeO dataset
+data = np.vstack([np.loadtxt(f) for f in filenames])
+xx_combined = data[:, 0] # shock velocity
+yy_combined = data[:, 3] # Temperature
 
 
 x_fit = np.linspace(min(xx_combined),max(xx_combined),100)
@@ -202,20 +141,16 @@ print(coefficients)
 print(errors)
 
 
-
-
-
-
 #ax1.scatter(xx,yy, s=4, label=labelname,facecolor = color)
 ax1.plot(x_fit, model(x_fit),color='grey',alpha=0.2,zorder=1,label='Fit',linewidth='0.5')
 ax1.fill_between(x_fit, model(x_fit)+ error,  model(x_fit)- error, facecolor='grey', alpha=0.1,zorder=1)
 
 ax1.errorbar(V_Mc, T_Mc, xerr = V_Mc_error, yerr=T_Mc_error, fmt='none', color='tan', label='MgO, M (2019)', elinewidth=0.9)
 
+#producing output file that has P-T information
 file_P_T = 'P_T.txt'
 f = open(file_P_T, 'w')
 
-xx_combined = np.array(xx_combined)
 
 Press_combined = rho0 * xx_combined * 1000 * (xx_combined * 1000.0-b)/a * 1e-9 #Us-P relationship based on our experiments
 for i in range(0,len(xx_combined)):
@@ -223,28 +158,17 @@ for i in range(0,len(xx_combined)):
 f.close()
 
 
+# Load DFT-MD data, skipping the header line
+data = np.loadtxt(file_DFT, skiprows=1)
 
-V_DFT = []
-Temp_DFT = []
-#Ref_DFT_error = []    
-
-with open(file_DFT, 'r') as file:
-    file.readline()
-    for line in file:
-        columns = line.strip().split()
-        V_DFT.append(float(columns[4]))
-        Temp_DFT.append(float(columns[2]))
-#        Ref_DFT_error.append(float(columns[8]))
+# Extract columns
+V_DFT = data[:, 4]
+Temp_DFT = data[:, 2]
         
-
-#errorbar(a, b, yerr=c,
-#Ref_DFT=np.array(Ref_DFT)*100.0
-#Ref_DFT_error=np.array(Ref_DFT_error)*100.0
 
 ax1.errorbar(V_DFT[0], Temp_DFT[0], fmt='x', color='blue', label='MgO, DFT(B2)')
 ax1.errorbar(V_DFT[1:5], Temp_DFT[1:5], fmt='x', color='red', label='MgO, DFT(Liquid)')
 
-#ax1.scatter(SMdata_Us, SMdata_R, label='Soubiran & Militzer (liquid) (2018)')
 ax1.plot(Us_smooth, T_smooth,linewidth=0.5,color='steelblue')
 ax1.fill_between(Phase_Us,Phase_T, 60000, color='seashell',zorder=0)
 ax1.fill_between(Phase_Us,0, Phase_T,color='aliceblue',zorder=0)
@@ -259,7 +183,6 @@ for i in ['top', 'bottom','left','right']:
 
 ax1.set_xlim([15.5, 28])
 ylimit = [0,60000]
-#ax1.set_ylim([0, 55000]) 
 ax1.set_ylim([ylimit[0],ylimit[1] ])
 ax1.text(26.5, ylimit[0]+0.1*(ylimit[1]-ylimit[0]),'(b)' ,fontsize=20)
 
@@ -275,7 +198,6 @@ ax2.set_xlim(ax1.get_xlim())
 ax2.set_xticks(ax1.get_xticks())
 
 
-#x2 = np.array([16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28])
 Press = rho0 * x2 * 1000 * (x2 * 1000-b)/a * 1e-9
 Press_int = [int(value) for value in Press]
 ax2.set_xticklabels(Press_int)
