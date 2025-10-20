@@ -15,70 +15,44 @@ from scipy.optimize import curve_fit
 plt.rcParams['font.family'] = 'Helvetica'
 
 
-
-
 filenames = ['MgFeO_shock_data/39878_Rfit.txt', 'MgFeO_shock_data/39874_Rfit.txt', 'MgFeO_shock_data/38691_Rfit.txt', 'MgFeO_shock_data/38692_Rfit.txt', 'MgFeO_shock_data/39879_Rfit.txt', 'MgFeO_shock_data/38694_Rfit.txt', 'MgFeO_shock_data/39882_Rfit.txt',   'MgFeO_shock_data/38693_Rfit.txt',  'MgFeO_shock_data/39877_Rfit.txt']
-
-
-#filenames = ['MgFeO_shock_data/39878_Rfit.txt', 'MgFeO_shock_data/39874_Rfit.txt', 'MgFeO_shock_data/38691_Rfit_v2.txt', '../omegaMgFeO_38692/38692_Rfit_v2.txt', '../omegaMgFeO_39879/39879_Rfit.txt', '../omegaMgFeO_38694/38694_Rfit_v2.txt', '../omegaMgFeO_39882/39882_Rfit.txt',   '../omegaMgFeO_38693/38693_Rfit_v2.txt',  '../omegaMgFeO_39877/39877_Rfit.txt',]
-
-
-
 
 colors = ['gold','coral','orange','green', '#33BEB7', 'skyblue', 'navy' ,'blue', 'royalblue'  ]
 labelnames = ['MgO (39878)', 'MgO (39874)','MgO (38691)','(Mg$_{0.98}$,Fe$_{0.02}$)O (38692)', '(Mg$_{0.98}$,Fe$_{0.02}$)O (39879)','(Mg$_{0.95}$,Fe$_{0.05}$)O (38694)', '(Mg$_{0.95}$,Fe$_{0.05}$)O (39882)', '(Mg$_{0.95}$,Fe$_{0.05}$)O (38693)',  '(Mg$_{0.95}$,Fe$_{0.05}$)O (39877)']
-
-
-
-                                        
+                                       
  
    # Soubiran & Militzer (2018)
 SMdata_P = [556.425, 631.8, 691.3, 754.38]  #in GPa
 SMdata_R = [1.656, 3.017, 4.568, 6.63]      #reflectivity                                                #Burkhardt
 
-    
-                                                               
-# Reading DFT data
-
-file_DFT = 'Hugoniot/mgo_dft_data.txt'
-
-                                                               
+                                                              
  
 def open_files(filename, ax,labelname,color):
-
-    xx = []
-    yy = []
-    error = []    
-
-    with open(filename, 'r') as file:
-        for line in file:
-            columns = line.strip().split()
-            xx.append(float(columns[1]))
-            yy.append(float(columns[0]))
-        
-
-    x_fit = np.linspace(min(xx),max(xx),100)
     
+    data = np.loadtxt(filename, skiprows=1)
+    xx = data[:, 1] # shock velocity from our experiments
+    yy = data[:, 0] # reflectivity from our experiments
+
+    x_fit = np.linspace(xx.min(), xx.max(), 100)
+    
+    
+    #modifications to the models to the two dataset so that the fit increases as the pressure increases
     if filename == 'MgFeO_shock_data/39879_Rfit.txt' or filename == 'MgFeO_shock_data/39874_Rfit.txt':
         model = np.poly1d(np.polyfit(xx, yy, 3))
     else:
         model = np.poly1d(np.polyfit(xx, yy, 2))
         
     error = np.sqrt(np.sum((model(xx) - yy)**2/len(xx)))
-
-
-    #ax.scatter(xx,yy, s=4, label=labelname,facecolor = color)
     ax.scatter(xx,yy, s=4,label=labelname, c=color, marker = 'o', alpha=0.3, edgecolors='none')
-    
-    
     ax.plot(x_fit, model(x_fit),color=color)
     ax.fill_between(x_fit, model(x_fit)+ error,  model(x_fit)- error, facecolor=color, alpha=0.2)
 
 
-x = np.array([16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28 ])
 
-rho0 = 3.584e3
-a = 1.2350
+x = np.arange(16, 29)
+
+rho0 = 3.584e3 # MgFeO density at zero pressure
+a = 1.2350  # a, b are from the Up-Us relationship
 b = 7.093172 * 1000
 
 Press = rho0 * x * 1000 * (x * 1000-b)/a * 1e-9 #Us-P relationship based on our experiments
@@ -87,113 +61,27 @@ SMdata_Us = []
 f = interpolate.interp1d(Press, x)
 for i in range(0,len(SMdata_P)):
     SMdata_Us.append(f(SMdata_P[i]))
-    
-print(SMdata_Us)
-
-
-
-
 
 fig, ax1 = plt.subplots()
-
 ax1.set_xticks(x)
 
-#for i in range(0,len(filenames)):
 for i in range(0,9):
     open_files(filenames[i], ax1,labelnames[i],colors[i])
 
-
-V_DFT = []
-Ref_DFT = []
-Ref_DFT_error = []    
-
-with open(file_DFT, 'r') as file:
-    file.readline()
-    for line in file:
-        columns = line.strip().split()
-        V_DFT.append(float(columns[4]))
-        Ref_DFT.append(float(columns[7]))
-        Ref_DFT_error.append(float(columns[8]))
-        
+# Reading DFT-MD data
+file_DFT = 'Hugoniot/mgo_dft_data.txt'
+data = np.loadtxt(file_DFT, skiprows=1)
+#shock velocity, reflectivity, reflectivity error from DFT-MD
+V_DFT, Ref_DFT, Ref_DFT_error = data[:, 4], data[:, 7]*100.0, data[:, 8]*100.0 
 
 
-Ref_DFT=np.array(Ref_DFT)*100.0
-Ref_DFT_error=np.array(Ref_DFT_error)*100.0
-
-
-V_Mc = []
-V_Mc_error = []
-Ref_Mc = []
-Ref_Mc_error = []    
-
-with open('Hugoniot/McCoy_R.txt', 'r') as file:
-    file.readline()
-    for line in file:
-        columns = line.strip().split()
-        #print(columns)
-        V_Mc.append(float(columns[1]))
-        V_Mc_error.append(float(columns[2]))
-        Ref_Mc.append(float(columns[3]))
-        Ref_Mc_error.append(float(columns[4]))
-        #print(columns[3])
-        
-
-
-Ref_Mc=np.array(Ref_Mc)*100.0
-Ref_Mc_error=np.array(Ref_Mc_error)*100.0
-
-
-
-
-
-
-
+data = np.loadtxt('Hugoniot/McCoy_R.txt', skiprows=1)
+#shock velocity, shock velocity error, reflectivity, reflectivity error from McCoy et al 2019
+V_Mc, V_Mc_error, Ref_Mc, Ref_Mc_error = data[:, 1], data[:, 2], data[:, 3] * 100.0, data[:, 4] * 100.0
 
 
 def polynomials(x,a,b,c,d):
     return a * x**3.0 + b*x**2.0 + c*x +d
-
-def combine_files(filename, xx_combined,yy_combined):
-    with open(filename, 'r') as file:
-        for line in file:
-            columns = line.strip().split()
-            xx_combined.append(float(columns[1])) #shock velocity
-            yy_combined.append(float(columns[0])) #temperature
-            
-            
-    return xx_combined, yy_combined
-
-
-
-xx_combined=[]
-yy_combined=[]
-for i in range(0,len(filenames)):
-    combine_files(filenames[i],xx_combined,yy_combined)
-    
-xx_mod=[]
-yy_mod=[]
-
-xx_mod_s=[]
-yy_mod_s=[]
-for i in range(0,len(xx_combined)):
-    if xx_combined[i]>20.0:
-        xx_mod.append(xx_combined[i])
-        yy_mod.append(yy_combined[i])  
-    else:
-        xx_mod_s.append(xx_combined[i])
-        yy_mod_s.append(yy_combined[i])  
-    
-
-
-x_fit = np.linspace(min(xx_mod),max(xx_mod),100)
-model = np.poly1d(np.polyfit(xx_mod, yy_mod, 2 ))
-error = np.sqrt(np.sum((model(xx_mod) - yy_mod)**2/len(xx_mod)))
-
-coefficients = model.coefficients
-
-
-
-
 
 
 
@@ -230,16 +118,11 @@ ax2.set_xticks(velocity_for_press_ticks)
 ax2.set_xticklabels(custom_press_ticks)
 
 
-#ax1.set_xticks(velocity_for_press_ticks) #AGU trick
-#ax1.set_xticklabels(custom_press_ticks)
-
 for i in ['top', 'bottom','left','right']:
     ax1.spines[i].set_linewidth(1.5)
 
 
-
 ax1.set_xlabel('Shock Velocity (km/s)', fontsize=17)
-ax1.set_xlabel('Pressure (GPa)', fontsize=17)
 ax1.set_ylabel('Reflectivity, $R$ (%)', fontsize=17)
 ax2.set_xlabel('Pressure (GPa)', fontsize=17)
 ax1.tick_params(axis='both', which='major', labelsize=12)
