@@ -29,7 +29,7 @@ SMdata_R = [1.656, 3.017, 4.568, 6.63]      #reflectivity                       
  
 def open_files(filename, ax,labelname,color):
     
-    data = np.loadtxt(filename, skiprows=1)
+    data = np.loadtxt(filename)
     xx = data[:, 1] # shock velocity from our experiments
     yy = data[:, 0] # reflectivity from our experiments
 
