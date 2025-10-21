@@ -1,6 +1,7 @@
+
 These files and data are associated with the paper entitled "Electrical conductivities of (Mg,Fe)O at extreme pressures and implications for planetary magma oceans" by Nakajima et al.
 
-Python scripts
+\\Python scripts
 
 Hugoniot_Up_Us_P_rho.py: This calculates the Hugoniot relationships for (Mg,Fe)O (Figure 2a, 2b)
 Us_Reflectivity.py: This calcualtes the reationship between the shock velocity and reflectivity (Figure 3a)
