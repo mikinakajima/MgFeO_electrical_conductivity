@@ -18,5 +18,5 @@ phase/: This stores data phase data files (used in Figure 3b)
 Note
 
 LLNL's AnalyzeVISAR code was used to analyze the VISAR and SOP data.
-Impedance matching IM_MM_MonteCarlo_2019.ipf written by Dr. Marius Millot.
+IM_MM_MonteCarlo_2019.ipf written by Dr. Marius Millot was used for impedance matching.
 
