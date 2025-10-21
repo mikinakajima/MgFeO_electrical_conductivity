@@ -14,6 +14,10 @@ These files and data are associated with the paper entitled
 - `MgFeO_shock_data/`: Stores data for reflectivity, temperature, DC conductivity, Z values, and conductivity models (Figure 3a–c, Supplementary Figures 2–3)
 - `phase/`: Stores phase data files (Figure 3b)
 
+## **Super-Earth modeling**
+The super-Earth modeling is based on [Lherm et al. (2024)](https://doi.org/10.1016/j.pepi.2024.107267).  
+Relevant codes are available at [https://doi.org/10.17632/3gj9r8rzx9.1](https://doi.org/10.17632/3gj9r8rzx9.1).
+
 ## **Note**
 - LLNL’s AnalyzeVISAR code was used to analyze the VISAR and SOP data.  
 - `IM_MM_MonteCarlo_2019.ipf` written by Dr. Marius Millot was used for impedance matching.
