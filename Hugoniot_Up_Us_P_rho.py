@@ -6,7 +6,7 @@ Created on Thu May 25 14:51:28 2023
 @author: mikinakajima
 """
 
-# This python script plots Figure 2 of Nakajima et al 2025
+# This python script plots Figure 2 of Nakajima et al.
 # Impedance matching is not conducted in this script. 
 # Instead, it was conducted using IM_MM_MonteCarlo_2019.ipf written by Dr. Marius Millot.
 
