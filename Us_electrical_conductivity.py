@@ -17,6 +17,7 @@ labelnames = ['MgO (39878)', 'MgO (39874)','MgO (38691)','Mg$_{0.98}$Fe$_{0.02}$
 
 
 file_DFT = 'Hugoniot/mgo_dft_data.txt' #DFT data
+# generating a file that includes Us-DC conductivity file
 file_Us_sigma = 'Us_sigma.txt'
 
 n0 = 1.743 #initial refractive index of MgO from McWilliams 2012
@@ -36,30 +37,22 @@ b_temp = -14158.0
 c_temp = 131180.0
 
 f = open(file_Us_sigma, 'w')
+# writign a file for the shock velocity vs electrical conductivity
 
 def open_files(filename, labelname, color, ax):
 
-    Us = []
-    RR = []
-    error = []  
-    rho = []
-    up = []
-    temp = []
-    pressure = []
+        
+    # ----- Load data -----
+# assuming 2-column file: RR(%) and Us(km/s)
+    data = np.loadtxt(filename)
+    RR = data[:, 0] * 0.01       # reflectivity, dimensionless
+    Us = data[:, 1]               # shock velocity, km/s
 
-    with open(filename, 'r') as file:
-        for line in file:
-            columns = line.strip().split()
-            
-            Us.append(float(columns[1]))
-            RR.append(float(columns[0])*0.01)
-
-
-    for i in range(0,len(Us)):
-        up.append((Us[i] * 1000 -b)/a)
-        rho.append(rho0 * Us[i]*1000/(Us[i]*1000-up[i])) # density after shock (at Us= 25km/s)
-        temp.append((a_temp * Us[i]**2.0 + b_temp*Us[i] + c_temp))
-        pressure.append((rho0 * Us[i]*1000* up[i])*1e-9)
+# ----- Derived quantities -----
+    up   = (Us * 1000 - b) / a                             # particle velocity [m/s]
+    rho  = rho0 * Us * 1000 / (Us * 1000 - up)             # shocked density [kg/m^3]
+    temp = a_temp * Us**2 + b_temp * Us + c_temp            # temperature [K or as defined]
+    pressure = rho0 * Us * 1000 * up * 1e-9                 # pressure [GPa]
         
 
     sigma = []
@@ -112,7 +105,7 @@ def open_files(filename, labelname, color, ax):
             
         sigma.append(sigma0)
         Z_store.append(Z)
-        #print(omegatau0)
+    
         
 
 
@@ -139,42 +132,36 @@ def calculate_r_nb(rho,Z, temp):
     ni = (rho*N_A)/molmass #ion density
     ne = Z*ni #electron density 
 
-    #temp = 30000
     v_fermi = (hbar/m_e) * (3 * pi**2 *ne)**(1.0/3.0) #fermi velocity 
     v_thermal = np.sqrt((2.0*k*temp)/m_e) #thermal velocity
     vel = [v_fermi, v_thermal] # use the larger velocity between fermi and thermal velocities
     l =  2.0 * (3.0/(4.0*np.pi*ni))**(1.0/3.0)
 
     omega = 2.0 * np.pi * 2.99792e8/(532e-9) 
-    #omega = 2.99e8/(532e-9) #frequency at 532 nm
     omega_p = np.sqrt((ne * e_charge**2)/(e_0*m_e)) #plasma frequency
-    scatter_tau = l/max(vel)#v_fermi
+    scatter_tau = l/max(vel)
     
     omegatau=scatter_tau * omega
     
     
-    #scatter_tau_org = (2.0/max(vel)) * (3.0/(4.0*pi**2.0 *ni))**(0.333) #tau scatter time, s #pi seems wrong!
     sigma0 = (ne * e_charge **2 * scatter_tau)/m_e #DC conductivity eq. 43 from Millot 2015
 
-    n_mod =np.sqrt(nb**2.0-omega_p**2.0/omega**2.0/(1+1j/omega/scatter_tau))
+   # n_mod =np.sqrt(nb**2.0-omega_p**2.0/omega**2.0/(1+1j/omega/scatter_tau))
+    n_mod =np.sqrt(nb**2 - (omega_p**2) / (omega**2 * (1 + 1j/(omega*scatter_tau))))
+
+    
     r_nb = (np.abs(n0-n_mod)/np.abs(n0+n_mod))**2.0
 
-    #n_real = np.sqrt(nb**2.0 - (omega_p/omega)**2.0/(1.0 + complex(0,1) /omega/scatter_tau)).real #real part of index of refraction
-    #n_imag = np.sqrt(nb**2.0 - (omega_p/omega)**2.0/(1.0 + complex(0,1) /omega/scatter_tau)).imag #real part of index of refraction
-    #r_nb = ((n_real - n0)**2.0 +n_imag**2.0)/ ((n_real + n0)**2 + n_imag**2.0) #reflectivity 
 
     return r_nb, sigma0, omegatau
-#    print('reflectivity = ', r_nb, 'DC conductivity (S/m)=',sigma0, 'Carrier Density (1/cm^3)=',ne*1e-6)
 
 
 fig, ax1 = plt.subplots()
 for i in range(0,len(filenames)):
     open_files(filenames[i], labelnames[i],colors[i],ax1)
     
-
-x = np.array([16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28])
+x = np.arange(16,29)
 ax1.set_xticks(x)
-#ax1.set_yscale("log")
 
 y = np.array([0, 5e4, 10e4, 15e4, 20e4, 25e4, 30e4 ])
 y_tick_labels= [f'$0$', f'$5$',f'$10$', f'$15$' , f'$20$', f'$25$', f'$30$']
@@ -185,7 +172,6 @@ ax1.set_yticks(y)
 
 f.close()
 
-#ax1.set_ylim([10, 250000])
 ax1.set_xlim([15.5, 28])
 
 
@@ -198,20 +184,13 @@ Temp =  a_temp * x**2.0 + b_temp*x + c_temp
 
 
 
-V_DFT = []
-Sigma_DFT = []
-Sigma_DFT_error = []    
+# Load data from file, skipping the header
+data = np.loadtxt(file_DFT, skiprows=1)
 
-with open(file_DFT, 'r') as file:
-    file.readline()
-    for line in file:
-        columns = line.strip().split()
-        V_DFT.append(float(columns[4]))
-        Sigma_DFT.append(float(columns[5]))
-        Sigma_DFT_error.append(float(columns[6]))
+V_DFT = data[:, 4]
+Sigma_DFT = data[:, 5]
+Sigma_DFT_error = data[:, 6]
 
-Sigma_DFT=np.array(Sigma_DFT)
-Sigma_DFT_error=np.array(Sigma_DFT_error)
 
 ax1.errorbar(V_DFT[0], Sigma_DFT[0], yerr=Sigma_DFT_error[0], fmt='x', color='blue')#, label='DFT, MgO(B2)')
 ax1.errorbar(V_DFT[1:5], Sigma_DFT[1:5], yerr=Sigma_DFT_error[1:5], fmt='x', color='red')#, label='DFT, MgO(Liquid)')
@@ -241,16 +220,14 @@ ax2.set_xticklabels(custom_press_ticks)
 
 
 
-# strixrude comparison
+# strixrude + 2020 comparison
 sigma00 = 1.99e5
 
 Delta_E = 75.94e3
 Delta_V = -0.061 * 1e-6
-#P = 500e9
-R = 8.3
-TT = 40000.0 #this needs to be updated I think
-
+R = 8.314 # gas constant
 P = Press * 1e9
+
 sigma_stix=np.zeros(len(x))
 for i in range(0,len(x)):
     sigma_stix[i] = sigma00 * np.exp(-(Delta_E+P[i]*Delta_V)/(R*Temp[i]))
@@ -263,31 +240,12 @@ ax1.text(15.7, 23.5*1e4, 'DFT-MD (Holmström et al. 2018)', fontsize=8)
 ax1.tick_params(axis='both', which='major', labelsize=12)
 ax2.tick_params(axis='both', which='major', labelsize=12)
 
-#def combine_files(filename, xx_combined,yy_combined):
-xx_combined=[]
-yy_combined=[]
-with open(file_Us_sigma, 'r') as file:
-    for line in file:
-        columns = line.strip().split()
-        xx_combined.append(float(columns[0])) #shock velocity
-        yy_combined.append(float(columns[1])) #reflectivity
-            
-        #print(columns[0], columns[1])
-    
-xx_mod=[]#xx_combined
-yy_mod=[]#yy_combined
 
-xx_mod_s=[]
-yy_mod_s=[]
 
-for i in range(0,len(xx_combined)):
-    if xx_combined[i]>0: #19.5
-        xx_mod.append(xx_combined[i])
-        yy_mod.append(yy_combined[i])  
-    else:
-        xx_mod_s.append(xx_combined[i])
-        yy_mod_s.append(yy_combined[i])  
-    
+
+data = np.loadtxt(file_Us_sigma)
+xx_mod = data[:, 0]  # Shock velocity
+yy_mod = data[:, 1]  # Reflectivity
 
 
 
@@ -301,8 +259,6 @@ errors = np.sqrt(np.diag(cov_matrix))
 
 
 x_fit2 = np.linspace(min(xx_mod),max(xx_mod),100)
-#ax1.plot(x_fit2,coefficients[0]*x_fit2**2.0 + coefficients[1]*x_fit2 +coefficients[2] ,color='grey',alpha=1,zorder=0,linewidth='1')
-#ax1.fill_between(x_fit2, model(x_fit2)+ error,  model(x_fit2)- error, facecolor='grey', alpha=0.1,zorder=0)
 
 print("Coefficients:", coefficients)
 print("errors:", errors)
@@ -312,12 +268,7 @@ for i in ['top', 'bottom','left','right']:
     ax1.spines[i].set_linewidth(1.5)
 
 
-
-
-
-
 ax1.set_xlabel('Shock Velocity (km/s)', fontsize=17)
-
 ax1.set_ylabel('DC Conductivity, $\sigma$ ($10^4$S/m)', fontsize=17)
 
 
