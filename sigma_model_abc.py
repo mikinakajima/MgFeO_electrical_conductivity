@@ -29,9 +29,14 @@ errors = np.sqrt(np.diag(cov_matrix))
 
 Us = np.array(Us)
 
-a_temp = 426.75
-b_temp = -14158.0
-c_temp = 131180.0
+#a_temp = 426.75
+#b_temp = -14158.0
+#c_temp = 131180.0
+
+rho0, a_v, b_v = np.loadtxt("Up-Us_coefficients.txt")
+b_v = b_v *1000.0
+a_temp, b_temp, c_temp = np.loadtxt("T_fit_coefficients.txt")
+
 
 TT =  a_temp*Us**2.0+b_temp*Us+ c_temp
 
@@ -60,10 +65,10 @@ print(errors)
 
 
 # velocity model
-a_v = 1.23011
-b_v = 7.12744
+#a_v = 1.23011
+#b_v = 7.12744
 
-rho0=3580.0
+#rho0=3580.0
 up=np.linspace(8,15.5) #km
 us_fit = a_v * up + b_v #km
 Press_fit = rho0 * up*1000.0 * us_fit*1000.0

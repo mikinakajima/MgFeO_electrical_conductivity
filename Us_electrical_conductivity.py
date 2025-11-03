@@ -21,20 +21,25 @@ file_DFT = 'Hugoniot/mgo_dft_data.txt' #DFT data
 file_Us_sigma = 'Us_sigma.txt'
 
 n0 = 1.743 #initial refractive index of MgO from McWilliams 2012
-rho0 = 3.58e3  
+#rho0 = 3.58e3  
 e_0 = 8.854e-12 #Vacuum permittivity
 e_charge=1.602e-19 #electron charge, C, A/s
 molmass = 40.0 * 1e-3  #kg/mol, MgO, assuming no dissociation
 
 # velocity model
-a = 1.23011
-b = 7.12744 * 1000
+#a = 1.23011
+#b = 7.12744 * 1000
 
 # temperature model
 
-a_temp = 426.75
-b_temp = -14158.0
-c_temp = 131180.0
+#a_temp = 426.75
+#b_temp = -14158.0
+#c_temp = 131180.0
+
+
+rho0, a, b = np.loadtxt("Up-Us_coefficients.txt")
+b = b *1000.0
+a_temp, b_temp, c_temp = np.loadtxt("T_fit_coefficients.txt")
 
 f = open(file_Us_sigma, 'w')
 # writign a file for the shock velocity vs electrical conductivity

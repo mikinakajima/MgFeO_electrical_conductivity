@@ -21,7 +21,7 @@ plt.rcParams['font.family'] = 'Helvetica'
 
 
 
-rho0=3.580 #MgO density
+rho0=3580 #MgO density
 
 
 colors = ['gold','coral','orange','green', '#33BEB7', 'skyblue', 'navy' ,'blue', 'royalblue']
@@ -77,10 +77,15 @@ rho_all = np.concatenate([mccoy["rho"], root["rho"], mcw["rho"], ours["rho"]])
 params, covariance = curve_fit(linear_model, up_all, us_all)
 a, b = params
 
+np.savetxt("Up-Us_coefficients.txt", [rho0, a, b])
+
 
 a_err = np.sqrt(covariance[0, 0])  # Standard error of 'a'
 b_err = np.sqrt(covariance[1, 1])  # Standard error of 'b'
 print(a,a_err,b, b_err, 'a,b, Us-Up')
+
+
+
 
 y_param = np.linspace(5.0, 20,100)
 x_param = a*y_param + b

@@ -51,9 +51,10 @@ def open_files(filename, ax,labelname,color):
 
 x = np.arange(16, 29)
 
-rho0 = 3.584e3 # MgFeO density at zero pressure
-a = 1.2350  # a, b are from the Up-Us relationship
-b = 7.093172 * 1000
+
+rho0, a, b = np.loadtxt("Up-Us_coefficients.txt")
+b = b *1000.0
+
 
 Press = rho0 * x * 1000 * (x * 1000-b)/a * 1e-9 #Us-P relationship based on our experiments
 

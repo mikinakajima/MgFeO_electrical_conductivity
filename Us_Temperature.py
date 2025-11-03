@@ -48,9 +48,14 @@ def open_files(filename, ax,labelname,color):
 
 x = np.arange(15, 31)
 
-rho0 = 3.580e3 #MgO density
-a = 1.23011 # MgFeO Up-Us relationship
-b = 7.12744 * 1000
+#rho0 = 3.580e3 #MgO density
+#a = 1.23011 # MgFeO Up-Us relationship
+#b = 7.12744 * 1000
+
+
+rho0, a, b = np.loadtxt("Up-Us_coefficients.txt")
+b = b *1000.0
+
 
 Press = rho0 * x * 1000 * (x * 1000-b)/a * 1e-9 #Us-P relationship based on our experiments
 
@@ -139,6 +144,8 @@ coefficients = model.coefficients
 errors = np.sqrt(np.diag(cov_matrix))
 print(coefficients)
 print(errors)
+np.savetxt("T_fit_coefficients.txt", coefficients)
+
 
 
 #ax1.scatter(xx,yy, s=4, label=labelname,facecolor = color)
