@@ -48,9 +48,6 @@ def open_files(filename, ax,labelname,color):
 
 x = np.arange(15, 31)
 
-#rho0 = 3.580e3 #MgO density
-#a = 1.23011 # MgFeO Up-Us relationship
-#b = 7.12744 * 1000
 
 
 rho0, a, b = np.loadtxt("Up-Us_coefficients.txt")
