@@ -34,7 +34,7 @@ Us = np.array(Us)
 #c_temp = 131180.0
 
 rho0, a_v, b_v = np.loadtxt("Up-Us_coefficients.txt")
-b_v = b_v *1000.0
+#b_v = b_v *1000.0
 a_temp, b_temp, c_temp = np.loadtxt("T_fit_coefficients.txt")
 
 
