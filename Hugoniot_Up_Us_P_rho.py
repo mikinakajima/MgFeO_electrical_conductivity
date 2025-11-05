@@ -102,9 +102,9 @@ plt.yticks(fontsize=25)
 
 plt.yticks(np.arange(10, 35, 5))
 
-plt.errorbar(mccoy["up"], mccoy["us"], xerr=mccoy["up_err"], yerr=mccoy["us_err"], fmt='o', markersize = 3, color='brown',label ='MgO (McCoy et al. 2019)')
-plt.errorbar(root["up"], root["us"], xerr=root["up_err"], yerr=root["us_err"], fmt='o', markersize = 3, color='grey', label ='MgO (Root et al. 2019)')
-plt.errorbar(mcw["up"], mcw["us"], xerr=mcw["up_err"], yerr=mcw["us_err"], fmt='o', markersize = 3, color='purple', label ='MgO (McWilliams et al. 2012)')
+plt.errorbar(mccoy["up"], mccoy["us"], xerr=mccoy["up_err"], yerr=mccoy["us_err"], fmt='o', markersize = 3, color='brown',label ='MgO (McCoy et al. 2019)',zorder=1)
+plt.errorbar(root["up"], root["us"], xerr=root["up_err"], yerr=root["us_err"], fmt='o', markersize = 3, color='grey', label ='MgO (Root et al. 2019)',zorder=1)
+plt.errorbar(mcw["up"], mcw["us"], xerr=mcw["up_err"], yerr=mcw["us_err"], fmt='o', markersize = 3, color='purple', label ='MgO (McWilliams et al. 2012)',zorder=1)
 
 
 
@@ -114,14 +114,27 @@ for i in ['top','bottom','left','right']:
 
 
 for i in range(0,9):
-    plt.errorbar(ours["up"][i], ours["us"][i], xerr=ours["up_err"][i], yerr=ours["us_err"][i], fmt='o', markersize = 15, color = colors[i], label=labelnames[i])#, label ='This work')
+    plt.errorbar(ours["up"][i], ours["us"][i], xerr=ours["up_err"][i], yerr=ours["us_err"][i], fmt='o', markersize = 15, color = colors[i], label=labelnames[i],zorder=3)#, label ='This work')
 
-plt.plot(y_param, x_param, color='black', label='Fit')
+plt.plot(y_param, x_param, color='black', label='Fit',zorder=2)
 
 
 plt.xlabel('Particle Velocity (km/s)', fontsize=30)
 plt.ylabel('Shock Velocity (km/s)', fontsize=30)
-plt.legend(frameon=False,fontsize=13,loc='upper left')
+
+
+handles, labels = ax.get_legend_handles_labels()
+lit_keys = ('McCoy', 'Root', 'McWilliams')
+
+is_lit = [any(k in lbl for k in lit_keys) for lbl in labels]
+new_order = [i for i, m in enumerate(is_lit) if not m] + [i for i, m in enumerate(is_lit) if m]
+
+ax.legend([handles[i] for i in new_order],
+           [labels[i] for i in new_order],
+           frameon=False, fontsize=11)
+
+
+#plt.legend(frameon=False,fontsize=13,loc='upper left')
 
 plt.text(0.9, 0.05, "(a)", transform=plt.gca().transAxes, fontsize=25, fontweight='bold')
 
@@ -133,16 +146,16 @@ plt.text(0.9, 0.05, "(b)", transform=plt.gca().transAxes, fontsize=25, fontweigh
 for i in ['top','bottom','left','right']:
     ax2.spines[i].set_linewidth(3)
 
-plt.errorbar(mccoy["rho"], mccoy["p"], xerr=mccoy["rho_err"], yerr=mccoy["p_err"], fmt='o', color='brown', markersize = 3)#, label ='MgO (McCoy et al. 2019)')
-plt.errorbar(root["rho"], root["p"], xerr=root["rho_err"], yerr=root["p_err"],color='grey', fmt='o', markersize = 3)#, label ='MgO (Root et al. 2019)')
-plt.errorbar(mcw["rho"], mcw["p"], xerr=mcw["rho_err"], yerr=mcw["p_err"], color='purple',fmt='o', markersize = 3)#, label ='MgO (McWilliams et al. 2012)')
+plt.errorbar(mccoy["rho"], mccoy["p"], xerr=mccoy["rho_err"], yerr=mccoy["p_err"], fmt='o', color='brown', markersize = 3,zorder = 1)#, label ='MgO (McCoy et al. 2019)')
+plt.errorbar(root["rho"], root["p"], xerr=root["rho_err"], yerr=root["p_err"],color='grey', fmt='o', markersize = 3,zorder = 1)#, label ='MgO (Root et al. 2019)')
+plt.errorbar(mcw["rho"], mcw["p"], xerr=mcw["rho_err"], yerr=mcw["p_err"], color='purple',fmt='o', markersize = 3,zorder = 1)#, label ='MgO (McWilliams et al. 2012)')
 
 for i in range(0,9):
-  plt.errorbar(ours["rho"][i], ours["p"][i], xerr=ours["rho_err"][i], yerr=ours["p_err"][i], fmt='o', markersize = 15, color = colors[i])# label ='MgO, MgFeO (this work)')
+  plt.errorbar(ours["rho"][i], ours["p"][i], xerr=ours["rho_err"][i], yerr=ours["p_err"][i], fmt='o', markersize = 15, color = colors[i],zorder = 3)# label ='MgO, MgFeO (this work)')
  
 
-plt.errorbar(dft["rho"][0], dft["p"][0], fmt='x', markersize = 10, color='blue', label ='MgO,DFT-MD(B2)')
-plt.errorbar(dft["rho"][1:5], dft["p"][1:5], fmt='x', markersize = 10, color='red', label ='MgO,DFT-MD(B2)')
+plt.errorbar(dft["rho"][0], dft["p"][0], fmt='x', markersize = 10, color='blue', label ='MgO,DFT-MD (B2)',zorder = 2)
+plt.errorbar(dft["rho"][1:5], dft["p"][1:5], fmt='x', markersize = 10, color='red', label ='MgO,DFT-MD (Liquid)',zorder = 2)
 
 
 
@@ -179,11 +192,15 @@ for i in range(len(ours["us"])):
 plt.xticks(fontsize=25)
 plt.yticks(fontsize=25)
 plt.xlim([5.5, 10])
-plt.legend(frameon=False,fontsize=13,loc='upper left')
+
+
+
+
+plt.legend(frameon=False,fontsize=11,loc='upper left')
 
 plt.xlabel('Density (g cm$^{-1}$)', fontsize=30)
 plt.ylabel('Pressure (GPa)', fontsize=30)
 
-plt.savefig('Fig_Us_Up_rho_P.eps',dpi=1000)
+plt.savefig('Fig_Us_Up_rho_P.pdf',dpi=1000)
 plt.show()
 plt.close()
