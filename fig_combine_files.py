@@ -1,22 +1,23 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Nov  5 13:14:13 2025
 
-@author: mikinakajima
-# combine files
+Creating Figure 3 of Nakajima et al. , entitled "Electrical conductivities of (Mg,Fe)O at extreme pressures and implications for planetary magma oceans"
+
 """
 
+import matplotlib as mpl
+mpl.rcParams['pdf.fonttype'] = 42   # Embed text as TrueType (editable)
+mpl.rcParams['ps.fonttype'] = 42
+mpl.rcParams['font.family'] = 'Helvetica'
 
 
 import matplotlib.pyplot as plt
-#from matplotlib import font_manager
 import numpy as np
 from scipy import interpolate
 from scipy.optimize import curve_fit
 from scipy.constants import pi, G, hbar, m_e, m_u, k, e, N_A
 
-plt.rcParams['font.family'] = 'Helvetica'
 
 
 fig, axes = plt.subplots(3, 1, figsize=(7.2, 10.2), sharex=True)
@@ -24,8 +25,8 @@ fig.subplots_adjust(hspace=0.3)
 
 # ---------- PANEL (a): Reflectivity ----------
 
-axes[0].tick_params(axis='x', which='both', labelbottom=True)  # (a)
-axes[1].tick_params(axis='x', which='both', labelbottom=True)  # (b)
+axes[0].tick_params(axis='x', which='both', labelbottom=True)  
+axes[1].tick_params(axis='x', which='both', labelbottom=True)
 
 
 filenames = ['MgFeO_shock_data/39878_Rfit.txt', 'MgFeO_shock_data/39874_Rfit.txt', 'MgFeO_shock_data/38691_Rfit.txt', 'MgFeO_shock_data/38692_Rfit.txt', 'MgFeO_shock_data/39879_Rfit.txt', 'MgFeO_shock_data/38694_Rfit.txt', 'MgFeO_shock_data/39882_Rfit.txt',   'MgFeO_shock_data/38693_Rfit.txt',  'MgFeO_shock_data/39877_Rfit.txt']
@@ -36,9 +37,14 @@ labelnames = ['MgO (39878)', 'MgO (39874)','MgO (38691)','(Mg$_{0.98}$,Fe$_{0.02
  
    # Soubiran & Militzer (2018)
 SMdata_P = [556.425, 631.8, 691.3, 754.38]  #in GPa
-SMdata_R = [1.656, 3.017, 4.568, 6.63]      #reflectivity                                                #Burkhardt
+SMdata_R = [1.656, 3.017, 4.568, 6.63]      #reflectivity    
+#SMdata_T_P = [554.80,628.583, 692.179, 754.495]
+SMdata_T = np.array([11.959,14.046, 15.983, 18.032])*1000.0
 
-                                                              
+
+
+
+                                                       
  
 def open_files(filename, ax,labelname,color):
     
@@ -145,7 +151,7 @@ ax2.tick_params(axis='both', which='major', labelsize=12)
 handles, labels = ax1.get_legend_handles_labels()
 
 # --- split into the two groups ---
-exp_handles = handles[:9]    # your data (keep as-is)
+exp_handles = handles[:9]    # our data 
 exp_labels  = labels[:9]
 
 lit_handles = handles[9:13]  # 9–12 literature data
@@ -163,10 +169,8 @@ all_labels  = exp_labels  + lit_labels
 ax1.legend(all_handles, all_labels, frameon=False, fontsize=6)
 
 
-#ax1.legend(frameon=False,fontsize=5)
-#fig.savefig('Fig_Rfit.pdf',dpi=1000, bbox_inches="tight")
 
-## -- temperature 
+# ---------- PANEL (b): Temperature ----------
 
 
 
@@ -188,7 +192,7 @@ def open_files(filename, ax,labelname,color):
     data = np.loadtxt(filename)
 
     xx = data[:, 0] # shock velocity
-    yy = data[:, 3] # Temperature
+    yy = data[:, 1] # Temperature
 
     x_fit = np.linspace(min(xx),max(xx),100)
     model = np.poly1d(np.polyfit(xx, yy, 2))
@@ -267,8 +271,6 @@ T_Mc_error  = data[:, 6]*1000.0
 
 
 
-#fig, ax1 = plt.subplots()
-
 
 ax1 = axes[1]
 
@@ -277,7 +279,6 @@ x2 = np.arange(16, 29)
 
 ax1.set_xticks(x2)
 
-#for i in range(0,len(filenames)):
 for i in range(0,len(filenames)):
     open_files(filenames[i], ax1,labelnames[i],colors[i])
     
@@ -285,7 +286,7 @@ for i in range(0,len(filenames)):
 #combining MgFeO dataset
 data = np.vstack([np.loadtxt(f) for f in filenames])
 xx_combined = data[:, 0] # shock velocity
-yy_combined = data[:, 3] # Temperature
+yy_combined = data[:, 1] # Temperature
 
 
 x_fit = np.linspace(min(xx_combined),max(xx_combined),100)
@@ -301,11 +302,12 @@ np.savetxt("T_fit_coefficients.txt", coefficients)
 
 
 
-#ax1.scatter(xx,yy, s=4, label=labelname,facecolor = color)
 ax1.plot(x_fit, model(x_fit),color='grey',alpha=0.2,zorder=1,label='Fit',linewidth='0.5')
 ax1.fill_between(x_fit, model(x_fit)+ error,  model(x_fit)- error, facecolor='grey', alpha=0.1,zorder=1)
 
 ax1.errorbar(V_Mc, T_Mc, xerr = V_Mc_error, yerr=T_Mc_error, fmt='none', color='tan', label='MgO, M (2019)', elinewidth=0.9, zorder = 1)
+
+ax1.scatter(SMdata_Us, SMdata_T, label='MgO, DFT-MD (Soubiran & Militzer 2018)', zorder=1)
 
 #producing output file that has P-T information
 file_P_T = 'P_T.txt'
@@ -374,23 +376,16 @@ velocity_for_press_ticks = pressure_to_velocity(custom_press_ticks)
 ax2.set_xticks(velocity_for_press_ticks)
 ax2.set_xticklabels(custom_press_ticks)
 
-
-#ax1.set_xlabel('Shock Velocity (km/s)', fontsize=17)
 ax1.set_ylabel('Temperature ($10^3$ K)', fontsize=17)
-#ax2.set_xlabel('Pressure (GPa)', fontsize=17)
 ax1.tick_params(axis='both', which='major', labelsize=12)
 ax2.tick_params(axis='both', which='major', labelsize=12)
 
 
-#ax1.legend(frameon=False,fontsize=8)
-#fig.savefig('Fig_Us_T.pdf',dpi=1000,  bbox_inches="tight")
-#plt.show()
-#plt.close()
 
 
-##  -- end of temperature 
 
-## - DC conductivity
+# ---------- PANEL (C): DC Conductivity ----------
+
 
 
 plt.rcParams['font.family'] = 'Helvetica'
@@ -406,7 +401,6 @@ file_DFT = 'Hugoniot/mgo_dft_data.txt' #DFT data
 file_Us_sigma = 'Us_sigma.txt'
 
 n0 = 1.743 #initial refractive index of MgO from McWilliams 2012
-#rho0 = 3.58e3  
 e_0 = 8.854e-12 #Vacuum permittivity
 e_charge=1.602e-19 #electron charge, C, A/s
 molmass = 40.0 * 1e-3  #kg/mol, MgO, assuming no dissociation
@@ -416,7 +410,7 @@ b = b *1000.0
 a_temp, b_temp, c_temp = np.loadtxt("T_fit_coefficients.txt")
 
 f = open(file_Us_sigma, 'w')
-# writign a file for the shock velocity vs electrical conductivity
+# writing a file for the shock velocity vs electrical conductivity
 
 def open_files(filename, labelname, color, ax):
 
@@ -439,7 +433,6 @@ def open_files(filename, labelname, color, ax):
     
     
     for i in range(0,len(rho)):
-        #print(i,filename)
         Z_ini = 0.0001
         Z = Z_ini # ionization, free parameter  
         r_nb = 0.0
@@ -447,9 +440,8 @@ def open_files(filename, labelname, color, ax):
         z_h = 0.0
         
         
-        if RR[i]<=0.0:#(np.abs(n0-1.0)/np.abs(n0+1.0))**2.0:
+        if RR[i]<=0.0:
             continue
-            
         else:
     
             while (RR[i]-r_nb) > 0:
@@ -486,18 +478,27 @@ def open_files(filename, labelname, color, ax):
         Z_store.append(Z)
     
         
+    Us_filtered = []
+    sigma_filtered = []
+    pressure_filtered = []
 
+    for i in range(len(Us)):
+        if Us[i] > 18:
+            Us_filtered.append(Us[i])
+            sigma_filtered.append(sigma[i])
+            pressure_filtered.append(pressure[i])
+            
+    ax.scatter(Us_filtered,sigma_filtered, s=4, c=color, marker = 'o', alpha=0.3, edgecolors='none') 
 
-    ax.scatter(Us,sigma, s=4, c=color, marker = 'o', alpha=0.3, edgecolors='none') #label=labelname
     
-    for i in range(0,len(Us)):
-        f.write(f"{Us[i]} {sigma[i]} {pressure[i]}\n")
+    for i in range(0,len(Us_filtered)):
+        f.write(f"{Us_filtered[i]} {sigma_filtered[i]} {pressure_filtered[i]}\n")
         
 
-    if len(Us)>0:
-        x_fit = np.linspace(min(Us),max(Us),100)
-        model = np.poly1d(np.polyfit(Us, sigma, 2))
-        error = np.sqrt(np.sum((model(Us) - sigma)**2/len(Us)))
+    if len(Us_filtered)>18.0:
+        x_fit = np.linspace(min(Us_filtered),max(Us_filtered),100)
+        model = np.poly1d(np.polyfit(Us_filtered, sigma_filtered, 2))
+        error = np.sqrt(np.sum((model(Us_filtered) - sigma_filtered)**2/len(Us_filtered)))
         ax.plot(x_fit, model(x_fit),color=color)
         ax.fill_between(x_fit, model(x_fit)+ error,  model(x_fit)- error, facecolor=color, alpha=0.2)
 
@@ -525,7 +526,7 @@ def calculate_r_nb(rho,Z, temp):
     
     sigma0 = (ne * e_charge **2 * scatter_tau)/m_e #DC conductivity eq. 43 from Millot 2015
 
-   # n_mod =np.sqrt(nb**2.0-omega_p**2.0/omega**2.0/(1+1j/omega/scatter_tau))
+
     n_mod =np.sqrt(nb**2 - (omega_p**2) / (omega**2 * (1 + 1j/(omega*scatter_tau))))
 
     
@@ -535,7 +536,7 @@ def calculate_r_nb(rho,Z, temp):
     return r_nb, sigma0, omegatau
 
 ax1 = axes[2]
-#fig, ax1 = plt.subplots()
+
 for i in range(0,len(filenames)):
     open_files(filenames[i], labelnames[i],colors[i],ax1)
  
