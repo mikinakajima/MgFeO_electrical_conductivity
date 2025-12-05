@@ -39,7 +39,6 @@ labelnames = ['MgO (39878)', 'MgO (39874)','MgO (38691)','(Mg$_{0.98}$,Fe$_{0.02
    # Soubiran & Militzer (2018)
 SMdata_P = [556.425, 631.8, 691.3, 754.38]  #in GPa
 SMdata_R = [1.656, 3.017, 4.568, 6.63]      #reflectivity    
-#SMdata_T_P = [554.80,628.583, 692.179, 754.495]
 SMdata_T = np.array([11.959,14.046, 15.983, 18.032])*1000.0
 
 
@@ -83,7 +82,7 @@ f = interpolate.interp1d(Press, x)
 for i in range(0,len(SMdata_P)):
     SMdata_Us.append(f(SMdata_P[i]))
 
-#fig, ax1 = plt.subplots()
+
 ax1 = axes[0]
 ax1.set_xticks(x)
 
