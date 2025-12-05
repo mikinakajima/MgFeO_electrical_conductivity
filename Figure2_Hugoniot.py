@@ -134,7 +134,6 @@ ax.legend([handles[i] for i in new_order],
            frameon=False, fontsize=11)
 
 
-#plt.legend(frameon=False,fontsize=13,loc='upper left')
 
 plt.text(0.9, 0.05, "(a)", transform=plt.gca().transAxes, fontsize=25, fontweight='bold')
 
